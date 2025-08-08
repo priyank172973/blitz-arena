@@ -25,15 +25,11 @@ class Quiz(models.Model):
         return f"{self.title} ({self.subject})"
     
 
-class Chapter(models.Model):
 
-    title = models.CharField(max_length=155)
 
-    subject = models.CharField(max_length=20, choices=[
-        ('Physics', 'Physics'),
-        ('Maths', 'Maths'),
-    ])
+    
 
+    
 
 
 class Question(models.Model):
@@ -68,7 +64,7 @@ class Question(models.Model):
     is_visible = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     chapter = models.ForeignKey(Chapter, on_delete=models.SET_NULL,null=True,blank=True, related_name='question')
-    correct_answer = models.JSONField(default='A')
+    correct_answer = models.JSONField(default='0')
     contest = models.ForeignKey(Quiz,
                                 related_name='questions',
                                 on_delete=models.SET_NULL,
@@ -86,6 +82,7 @@ class QuestionImage(models.Model):
 
     question = models.ForeignKey(Question, on_delete= models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='contest/image',validators=[validate_file_size],blank=True,null=True)
+    captions = models.CharField(max_length=200,blank=True)
     
 
 
@@ -95,7 +92,8 @@ class QuestionOption(models.Model):
     text = models.CharField(max_length=300, blank=True)
     is_correct = models.BooleanField(default=False)
 
-
+    def __str__(self):
+        return f"Image for {self.question.title}"
 
 
 class Submission(models.Model):
@@ -105,8 +103,8 @@ class Submission(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
-    user_answer = models.JSONField()
-    is_correct = models.BooleanField()
+    selected_options = models.ManyToManyField(QuestionOption,blank=True)
+    submitted_value = models.CharField(max_length=155,blank=True,null=True)
     time_taken = models.FloatField()
 
     class Meta:
