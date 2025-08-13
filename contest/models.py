@@ -73,22 +73,10 @@ class Question(models.Model):
     quizzes = models.ManyToManyField('Quiz',
                                 related_name='questions',
                                 through='QuizQuestion',
-                                on_delete=models.SET_NULL,
-                                null=True,
                                 blank=True
                                 )
     
-    class Meta:
-        # Ensure question numbers don’t collide inside a contest
-        constraints = [
-            models.UniqueConstraint(
-                fields=["contest"],
-                name="uq_question_contest_order",
-                condition=models.Q(contest__isnull=False),
-            )
-        ]
-
-
+    
 
     def __str__(self):
         return f"{self.title} ({self.get_type_display()})"
@@ -127,7 +115,7 @@ class QuizQuestion(models.Model):
 class Submission(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    contest = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
@@ -138,7 +126,7 @@ class Submission(models.Model):
     points_rewarded = models.DecimalField(max_digits=7, decimal_places=2, default=0)
 
     class Meta:
-        unique_together = ('user','contest','question')
+        unique_together = ('user','quiz','question')
 
 
     def __str__(self):
