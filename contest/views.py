@@ -1,3 +1,9 @@
 from django.shortcuts import render
+from rest_framework.viewsets import ModelViewSet
+from.models import Chapter
+from.serializers import ChapterSerializer
 
-# Create your views here.
+class ChapterViewSet(ModelViewSet):
+    
+    queryset = Chapter.objects.all()
+    serializer_class = ChapterSerializer

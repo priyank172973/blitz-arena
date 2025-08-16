@@ -23,6 +23,11 @@ class Quiz(models.Model):
     penalty_per_wrong = models.IntegerField(default=0)
 
 
+
+    class Meta:
+        verbose_name_plural = "Quizzes"
+
+
     def __str__(self) -> str:
         return f"{self.title} ({self.subject})"
     
@@ -35,6 +40,12 @@ class Chapter(models.Model):
         ('Physics', 'Physics'),
         ('Maths', 'Maths'),
     ])
+
+
+
+
+    def __str__(self):
+        return self.title
 
 
 

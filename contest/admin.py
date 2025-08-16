@@ -26,11 +26,34 @@ class QuestionImageInline(admin.TabularInline):
 @admin.register(models.Question)
 class QuestionAdmin(admin.ModelAdmin):
 
-    list_display = ['title','subject','type','chapter','correct_answer','quizzes_title']
+    list_display = ['title','subject','type','chapter','correct_answer']
+    search_fields = ['statement']
+    list_filter = ['type','level']
 
     inlines = [QuestionImageInline,QuestionOptionInline]
 
 
+@admin.register(models.Quiz)
+class QuizAdmin(admin.ModelAdmin):
+    
+    list_display = ['title','subject','start_time']
 
-    def quizzes_title(self, question):
-        return question.quizzes.title
+    list_filter = ['subject','is_rated']
+    search_fields = ['title']
+
+
+
+@admin.register(models.QuizQuestion)
+class QuizQuestionAdmin(admin.ModelAdmin):
+
+    list_display = ['question_title']
+
+    def question_title(self,quizquestion):
+        return quizquestion.question.title
+
+    
+
+
+
+    # def quizzes_title(self, question):
+    #     return question.quizzes.title
