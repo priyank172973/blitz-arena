@@ -36,7 +36,7 @@ class QuestionAdmin(admin.ModelAdmin):
 @admin.register(models.Quiz)
 class QuizAdmin(admin.ModelAdmin):
     
-    list_display = ['title','subject','start_time']
+    list_display = ['title','subject','created_at']
 
     list_filter = ['subject','is_rated']
     search_fields = ['title']

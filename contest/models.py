@@ -16,7 +16,7 @@ class Quiz(models.Model):
 
     title = models.CharField(max_length=255)
     subject = models.CharField(max_length=10, choices=SUBJECT_CHOICE)
-    start_time = models.DateTimeField()
+    created_at = models.DateTimeField()
     duration_minutes = models.IntegerField(default=20)
     is_rated = models.BooleanField(default=True)
     is_visible = models.BooleanField(default=False)
@@ -113,7 +113,7 @@ class QuestionOption(models.Model):
 
 class QuizQuestion(models.Model):
 
-    quiz = models.ForeignKey('Quiz', on_delete=models.CASCADE)
+    quiz = models.ForeignKey('Quiz', on_delete=models.CASCADE,related_name='quiz_question')
     question = models.ForeignKey('Question', on_delete=models.CASCADE)
     
     order = models.PositiveIntegerField(default=1)
