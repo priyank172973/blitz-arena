@@ -1,17 +1,25 @@
 from rest_framework_nested import routers
 from django.urls import path, include
-from.views import ChapterViewSet, QuizViewSet, QuestionViewSet,QuizQuestionViewSet
+from.views import ChapterViewSet, QuizViewSet, QuestionViewSet,QuizQuestionViewSet, QuizStandingViewSet
 
 
 router = routers.DefaultRouter()
 
-router.register('Chapter',ChapterViewSet)
+router.register('Chapters',ChapterViewSet)
 
-router.register('Quiz', QuizViewSet)
+router.register('Quizzes', QuizViewSet)
 
-router.register('Question', QuestionViewSet)
+router.register('Questions', QuestionViewSet)
 
-router.register('QuizQuestion',QuizQuestionViewSet)
+#router.register('QuizQuestion',QuizQuestionViewSet)
 
 
-urlpatterns = router.urls
+quiz_router = routers.NestedDefaultRouter(
+    router, 'Quizzes', lookup='quiz')
+
+quiz_router.register('results',QuizStandingViewSet,basename='quiz-result')
+
+
+
+
+urlpatterns = router.urls + quiz_router.urls

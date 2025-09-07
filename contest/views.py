@@ -2,11 +2,11 @@ from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import AllowAny, IsAdminUser,IsAuthenticatedOrReadOnly
-from.models import Chapter,Quiz, Question, QuizQuestion
+from.models import Chapter,Quiz, Question, QuizQuestion, UserQuizResult
 from.filters import ChapterFilter, QuizFilter
 from.serializers import (ChapterSerializer, QuizListSerializer,
                         QuizDetailSerializer, QuizUpdateSerializer,
-                        QuestionSerializer,QuizQuestionSerializer)
+                        QuestionSerializer,QuizQuestionSerializer,StandingSerializer)
 
 class ChapterViewSet(ModelViewSet):
     
@@ -92,3 +92,23 @@ class QuizQuestionViewSet(ModelViewSet):
 
      serializer_class = QuizQuestionSerializer
 
+
+
+class QuizStandingViewSet(ModelViewSet):
+
+    serializer_class = StandingSerializer
+    permission_classes = [AllowAny]
+    http_method_names = ['get']
+
+    def get_queryset(self):
+
+        quiz_id = self.kwargs.get('quiz_pk')
+
+        return (UserQuizResult.objects
+            .select_related("user")
+            .filter(quiz_id=quiz_id, is_virtual=False)
+            .exclude(status=UserQuizResult.Status.DISQUALIFIED)
+            .order_by("-score", "penalties", "created_at", "id")
+        )
+
+        

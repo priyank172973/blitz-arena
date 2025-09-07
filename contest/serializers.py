@@ -1,7 +1,7 @@
 
 from django.db import transaction
 from rest_framework import serializers
-from .models import Chapter, Quiz, QuizQuestion, Question, QuestionOption
+from .models import Chapter, Quiz, QuizQuestion, Question, QuestionOption, UserQuizResult
 
 
 class ChapterSerializer(serializers.ModelSerializer):
@@ -149,5 +149,14 @@ class QuizUpdateSerializer(serializers.ModelSerializer):
         return quiz
 
 
+
+class StandingSerializer(serializers.ModelSerializer):
+
+    username = serializers.CharField(source="user.username", read_only=True)
+
+    class Meta:
+
+        model = UserQuizResult
+        fields = ['user_id','username','score','penalties','rank','status']
 
 

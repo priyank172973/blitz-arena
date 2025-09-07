@@ -53,7 +53,18 @@ class QuizQuestionAdmin(admin.ModelAdmin):
 
     
 
+@admin.register(models.UserQuizResult)
+class UserQuizResultAdmin(admin.ModelAdmin):
 
+    list_display = ['id','user','quiz','rank','score','penalties','status','finalized_at']
+    list_filter=['status','quiz']
+    search_fields = ('user__username', 'user__email')
+    actions = ["finalize_selected_quiz"]
+
+
+
+    def finalize_selected_quiz(self, request, queryset):
+        pass
 
     # def quizzes_title(self, question):
     #     return question.quizzes.title

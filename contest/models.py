@@ -79,7 +79,7 @@ class Question(models.Model):
     type = models.CharField(max_length=10,choices=TYPE_CHOICES)
     is_visible = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    chapter = models.ForeignKey(Chapter, on_delete=models.SET_NULL,null=True,blank=True, related_name='question')
+    chapter = models.ForeignKey(Chapter, on_delete=models.SET_NULL,null=True,blank=True, related_name='question') #need to update many-to
     correct_answer = models.CharField(max_length=50,null=True)
     quizzes = models.ManyToManyField('Quiz',
                                 related_name='questions',
@@ -127,7 +127,7 @@ class Submission(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    question = models.ForeignKey(QuizQuestion, on_delete=models.CASCADE)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     selected_options = models.ManyToManyField(QuestionOption,blank=True)
@@ -147,7 +147,7 @@ class Submission(models.Model):
 
 
 
-class QuizResult(models.Model):
+class UserQuizResult(models.Model):
     class Status(models.TextChoices):
         PENDING = "PENDING", "Pending"
         FINALIZED = "FINALIZED", "Finalized"
