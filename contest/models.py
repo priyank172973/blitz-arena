@@ -117,7 +117,7 @@ class QuizQuestion(models.Model):
     question = models.ForeignKey('Question', on_delete=models.CASCADE)
     
     order = models.PositiveIntegerField(default=1)
-    base_points = models.PositiveIntegerField(default=10)
+    base_points = models.PositiveIntegerField(default=100)
 
     class Meta:
         unique_together = ('quiz','question')
@@ -147,6 +147,8 @@ class Submission(models.Model):
 
 
 
+
+
 class UserQuizResult(models.Model):
     class Status(models.TextChoices):
         PENDING = "PENDING", "Pending"
@@ -158,7 +160,7 @@ class UserQuizResult(models.Model):
 
     rank = models.PositiveIntegerField(null=True, blank=True)
     score = models.FloatField(default=0)
-    solved_count = models.PositiveIntegerField(default=0)
+    correct_answers = models.PositiveIntegerField(default=0)
     penalties = models.IntegerField(default=0)
 
     old_rating = models.IntegerField(null=True, blank=True)
@@ -183,7 +185,5 @@ class UserQuizResult(models.Model):
 
     # def __str__(self):
     #     return f"{self.user} @ {self.quiz} rank={self.rank} Δ={self.rating_change or 0:+}"
-
-
 
     

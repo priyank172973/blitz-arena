@@ -2,11 +2,12 @@ from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import AllowAny, IsAdminUser,IsAuthenticatedOrReadOnly
-from.models import Chapter,Quiz, Question, QuizQuestion, UserQuizResult
+from.models import Chapter,Quiz, Question, QuizQuestion, UserQuizResult,Submission
 from.filters import ChapterFilter, QuizFilter
 from.serializers import (ChapterSerializer, QuizListSerializer,
                         QuizDetailSerializer, QuizUpdateSerializer,
                         QuestionSerializer,QuizQuestionSerializer,StandingSerializer)
+from django.conf import settings
 
 class ChapterViewSet(ModelViewSet):
     
@@ -109,6 +110,90 @@ class QuizStandingViewSet(ModelViewSet):
             .filter(quiz_id=quiz_id, is_virtual=False)
             .exclude(status=UserQuizResult.Status.DISQUALIFIED)
             .order_by("-score", "penalties", "created_at", "id")
-        )
 
+
+            )
+    
+    
+    def submission_check(self,submission):
+
+            question = submission.question.question
+            
+            if question.type == 'SCQ':
+                correct_option = question.options.filter(is_correct = True).first()
+
+                if correct_option and submission.selected_options.filter(id= correct_option.id).exists():
+                    submission.points_rewarded = question.base_points
+                else:
+                    submission.points_rewarded = 0
+
+            elif question.type == 'MCQ':
+                correct_options = set(question.options.filter(is_correct = True).values_list('id', flat=True))
+                selected_options = set(submission.selected_options.values_list('id', flat=True))
+
+                correct_count = len(correct_options & selected_options)
+                total_correct = len(correct_options) 
+
+                if total_correct > 0:
+                    submission.points_rewarded = (correct_count / total_correct) * question.base_points
+                else:
+                    submission.points_rewarded = 0  # Or handle this case differently if needed
+                
+            elif question.type == 'INT':
+
+                correct_answer = question.correct_answer
+                if int(correct_answer) == int(submission.submitted_value):
+                    submission.points_rewarded = question.base_points
+                else:
+                    submission.points_rewarded = 0 
+
+            submission.save()
+
+
+
+
+
+    def list(self, request, **kwargs):
+
+        query_set = self.get_queryset()
+
+
+
+        quiz_id = self.kwargs.get('quiz_pk')
+
+    
+
+        for result in query_set:
+
+            submissions = Submission.objects.filter(user_id = result.user_id, quiz_id = result.quiz_id)
+            result.correct_answers = 0
+            result.penalties = 0
+            total_points = 0
+
+            for submission in submissions:
+                self.submission_check(submission)
+                total_points = total_points + submission.points_rewarded
+                
+
+                if submission.points_rewarded>0:
+                    result.correct_answers = result.correct_answers + 1
+                else:
+                    result.penalties = result.penalties + 1
+            
+
+
+
+            result.score = total_points - result.penalties * settings.PENALTY_MULTIPLIER
         
+            result.save()
+
+        serializer = self.get_serializer(query_set, many=True)
+        return Response(serializer.data)
+
+         
+        
+                           
+
+       # Still need to think about this
+
+   
