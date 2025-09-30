@@ -34,16 +34,17 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuizQuestion
 
-        fields = ['id','order','question','quiz_id']
+        fields = ['id','order','question',] #quiz_id removed
 
 class QuizDetailSerializer(serializers.ModelSerializer):
 
-    quiz_question = QuizQuestionSerializer(many = True)
+    quiz_question = QuizQuestionSerializer( many = True )
 
     #questions = QuizQuestionSerializer(many = True, write_only = True,required = False)
     questions_remove = serializers.ListField(
         child=serializers.IntegerField(min_value=1),
         required=False,
+        write_only=True
     )
     
 
@@ -57,8 +58,6 @@ class QuizListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         fields = ['id', 'title', 'subject', 'created_at', 'is_rated', 'penalty_per_wrong']
-
-
 
 class QuizQuestionItemSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
@@ -145,8 +144,6 @@ class QuizUpdateSerializer(serializers.ModelSerializer):
 
         return quiz
 
-
-
 class StandingSerializer(serializers.ModelSerializer):
 
     username = serializers.CharField(source="user.username", read_only=True)
@@ -154,5 +151,5 @@ class StandingSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = UserQuizResult
-        fields = ['user_id','score','correct_answers','penalties','rank','status']
+        fields = ['user_id','username','score','correct_answers','penalties','rank','status']
 
