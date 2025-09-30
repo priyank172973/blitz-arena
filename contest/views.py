@@ -1,4 +1,6 @@
 from django.shortcuts import render
+from django.db.models import Prefetch
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import AllowAny, IsAdminUser,IsAuthenticatedOrReadOnly
@@ -8,6 +10,10 @@ from.serializers import (ChapterSerializer, QuizListSerializer,
                         QuizDetailSerializer, QuizUpdateSerializer,
                         QuestionSerializer,QuizQuestionSerializer,StandingSerializer)
 from django.conf import settings
+
+from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
+from rest_framework.response import Response
+
 
 class ChapterViewSet(ModelViewSet):
     
@@ -20,21 +26,18 @@ class ChapterViewSet(ModelViewSet):
     
 
 
-
 class QuizViewSet(ModelViewSet):
 
     queryset = Quiz.objects.all()
-
     filter_backends = [DjangoFilterBackend]
+    renderer_classes = [JSONRenderer, TemplateHTMLRenderer]
     filterset_class = QuizFilter
 
-    
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [IsAdminUser()]     # admin-only writes
         return [AllowAny()]
     
-
     def get_serializer_class(self):
         if self.action == "list":
             return QuizListSerializer
@@ -44,8 +47,55 @@ class QuizViewSet(ModelViewSet):
 
         return  QuizUpdateSerializer
     
+    def get_queryset(self):
+        """
+        Keep list() light; prefetch only for retrieve() so detail is fast and ordered.
+        """
+        qs = super().get_queryset()
+        if getattr(self, "action", None) == "retrieve":
+            return qs.prefetch_related(
+                Prefetch(
+                    "quiz_question",
+                    queryset=QuizQuestion.objects
+                        .select_related("question__chapter")
+                        .prefetch_related("question__options")  # if related_name is 'options'; otherwise use 'question__questionoption_set'
+                        .order_by("order"),
+                )
+            )
+        return qs
+    
+    def list(self, request, *args, **kwargs):
+        qs = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(qs)
+
+        # HTML branch
+        if request.accepted_renderer.format == "html":
+            items = page if page is not None else qs
+            s = self.get_serializer(items, many=True, context={"request": request})
+            return Response(
+                {"quizzes": s.data, "is_paginated": page is not None},
+                template_name="quizzes/list.html",
+            )
+
+        # JSON branch
+        if page is not None:
+            s = self.get_serializer(page, many=True)
+            return self.get_paginated_response(s.data)
+        s = self.get_serializer(qs, many=True)
+        return Response(s.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        quiz = self.get_object()  # uses the prefetching from get_queryset()
+        if request.accepted_renderer.format == "html":
+            s = self.get_serializer(quiz, context={"request": request})
+            return Response({"quiz": s.data}, template_name="quizzes/detail.html")
+        s = self.get_serializer(quiz)
+        return Response(s.data)
+    
 
 class QuestionViewSet(ModelViewSet):
+
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
 
     queryset = Question.objects.all()
     
@@ -80,18 +130,57 @@ class QuestionViewSet(ModelViewSet):
         if not next_q_ids:
             print('test2')
             return qs
-
-
-        print('test3')
         return qs.exclude(id__in = next_q_ids)
     
+#---------------------------CPT CODE BLOCK STARTS HERE--------------------------------------#
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # DRF pagination still works for JSON; for HTML we’ll manually pass items
+        page = self.paginate_queryset(queryset)
+        if request.accepted_renderer.format == 'html':
+            items = page if page is not None else queryset
+            serializer = self.get_serializer(items, many=True, context={'request': request})
+            return Response(
+                {'questions': serializer.data, 'is_paginated': page is not None},
+                template_name='questions/list.html'
+            )
+
+        # default JSON behavior
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    # HTML detail view (optional but handy for per-question page)
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if request.accepted_renderer.format == 'html':
+            serializer = self.get_serializer(instance, context={'request': request})
+            return Response({'q': serializer.data}, template_name='questions/detail.html')
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+    
+#---------GPT CODE BLOCK ENDS HERE ---------#
 
 class QuizQuestionViewSet(ModelViewSet):
 
-     queryset = QuizQuestion.objects.all()
+    
 
-     serializer_class = QuizQuestionSerializer
+    def get_queryset(self):
+        qs = super().get_queryset().select_related(
+            'quiz', 'question__chapter'
+        ).prefetch_related('question__options')  # adjust related names if needed
+
+        quiz_pk = self.kwargs.get('quiz_pk')  # <-- from NestedDefaultRouter(lookup='quiz')
+        if quiz_pk:
+            qs = qs.filter(quiz_id=quiz_pk)
+        return qs
+
+    serializer_class = QuizQuestionSerializer
 
 
 

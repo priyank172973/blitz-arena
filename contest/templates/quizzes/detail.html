@@ -1,0 +1,27 @@
+<h1 class="text-2xl font-bold mb-2">{{ quiz.title }}</h1>
+<p class="mb-4">Time: {{ quiz.duration_minutes|default:"—" }} min</p>
+
+<h2 class="text-xl font-semibold mb-2">Questions</h2>
+<ol class="list-decimal pl-6 space-y-4">
+  {% for row in quiz.quiz_question %}
+    <li>
+      <div class="font-semibold mb-1">
+        {{ row.order }}. {{ row.question.title }}
+      </div>
+
+      {% if row.question.statement %}
+        <div class="mb-2">{{ row.question.statement }}</div>
+      {% endif %}
+
+      {% if row.question.options %}
+        <ul class="list-disc pl-6 space-y-1">
+          {% for opt in row.question.options %}
+            <li>{{ opt.text }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li>No questions in this quiz.</li>
+  {% endfor %}
+</ol>

@@ -14,10 +14,18 @@ router.register('Questions', QuestionViewSet)
 #router.register('QuizQuestion',QuizQuestionViewSet)
 
 
-quiz_router = routers.NestedDefaultRouter(
-    router, 'Quizzes', lookup='quiz')
+# urls.py
+quiz_router = routers.NestedDefaultRouter(router, r'Quizzes', lookup='quiz')
+quiz_router.register(r'questions', QuizQuestionViewSet, basename='quiz-questions')
 
-quiz_router.register('results',QuizStandingViewSet,basename='quiz-result')
+
+
+
+# quiz_router = routers.NestedDefaultRouter(router, r'quizzes', lookup='quiz')
+# quiz_router.register(r'questions', QuizViewSet, basename='quiz-questions')   # <-- THIS
+
+# quiz_router.register(r'results', QuizStandingViewSet, basename='quiz-result')
+
 
 
 
