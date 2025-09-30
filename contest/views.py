@@ -24,7 +24,7 @@ class ChapterViewSet(ModelViewSet):
 class QuizViewSet(ModelViewSet):
 
     queryset = Quiz.objects.all()
-
+    
     filter_backends = [DjangoFilterBackend]
     filterset_class = QuizFilter
 
