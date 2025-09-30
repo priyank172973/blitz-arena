@@ -157,5 +157,5 @@ class StandingSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = UserQuizResult
-        fields = ['user_id','username','score','correct_answers','penalties','rank','status']
+        fields = ['user_id','score','correct_answers','penalties','rank','status']
 
