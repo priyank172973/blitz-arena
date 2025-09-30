@@ -7,8 +7,14 @@
 .env
 # ...existing code...
 # Python artifacts
-__pycache__/
+__pycache__
 *.pyc
 *.pyo
 *.pyd
 # ...existing code...
+# filepath: /Users/priyank/Desktop/blitz/.gitignore
+# Ignore Python bytecode files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
