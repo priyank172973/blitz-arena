@@ -132,6 +132,7 @@ class QuestionViewSet(ModelViewSet):
             return qs
         return qs.exclude(id__in = next_q_ids)
     
+    
 #---------------------------CPT CODE BLOCK STARTS HERE--------------------------------------#
 
     def list(self, request, *args, **kwargs):
@@ -181,7 +182,6 @@ class QuizQuestionViewSet(ModelViewSet):
         return qs
 
     serializer_class = QuizQuestionSerializer
-
 
 
 class QuizStandingViewSet(ModelViewSet):
