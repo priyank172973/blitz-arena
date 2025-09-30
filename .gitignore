@@ -1,6 +1,21 @@
+
 # Default ignored files
 /shelf/
 /workspace.xml
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+.env
+# ...existing code...
+# Python artifacts
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+# ...existing code...
+# filepath: /Users/priyank/Desktop/blitz/.gitignore
+# Ignore Python bytecode files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
