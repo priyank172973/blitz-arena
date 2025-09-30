@@ -18,7 +18,6 @@ class OptionSerializer(serializers.ModelSerializer):
 
         fields = ['id','text']
 
-
 class QuestionSerializer(serializers.ModelSerializer):
 
     chapter = ChapterSerializer()
@@ -54,7 +53,6 @@ class QuizDetailSerializer(serializers.ModelSerializer):
 
         fields = ['id', 'title','subject','created_at','is_rated','penalty_per_wrong','duration_minutes','quiz_question','questions_remove']
 
-
 class QuizListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
@@ -66,7 +64,6 @@ class QuizQuestionItemSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
     order = serializers.IntegerField(min_value = 1)
     base_points = serializers.IntegerField(min_value =0, default = 10)
-
 
 class QuizUpdateSerializer(serializers.ModelSerializer):
 

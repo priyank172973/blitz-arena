@@ -34,7 +34,6 @@ class QuizViewSet(ModelViewSet):
             return [IsAdminUser()]     # admin-only writes
         return [AllowAny()]
     
-
     def get_serializer_class(self):
         if self.action == "list":
             return QuizListSerializer
