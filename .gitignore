@@ -5,3 +5,10 @@
 /dataSources/
 /dataSources.local.xml
 .env
+# ...existing code...
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+# ...existing code...
