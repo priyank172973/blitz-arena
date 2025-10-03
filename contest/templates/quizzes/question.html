@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ quiz_title }} - Question {{ current_question }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        .quiz-header {
+            margin-bottom: 30px;
+        }
+        
+        .quiz-title {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .question-counter {
+            color: #666;
+            font-size: 14px;
+            text-align: right;
+        }
+        
+        .question-section {
+            margin-bottom: 30px;
+        }
+        
+        .chapter-badge {
+            display: inline-block;
+            background: #f0f0f0;
+            color: #666;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            color: #333;
+            font-size: 20px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        .options-list {
+            list-style: none;
+        }
+        
+        .option-item {
+            margin-bottom: 15px;
+        }
+        
+        .option-label {
+            display: block;
+            padding: 18px 25px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+        }
+        
+        .option-label:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .option-input {
+            margin-right: 12px;
+        }
+        
+        .option-input:checked + .option-text {
+            font-weight: 600;
+        }
+        
+        .option-label:has(input:checked) {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-previous {
+            background: #e0e0e0;
+            color: #666;
+        }
+        
+        .btn-previous:hover:not(:disabled) {
+            background: #d0d0d0;
+        }
+        
+        .btn-next {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+        }
+        
+        .btn-next:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            margin-left: auto;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(56, 239, 125, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container" 
+         data-quiz-id="{{ quiz_id }}" 
+         data-question-id="{{ question.id }}">
+        <div class="quiz-header">
+            <h1 class="quiz-title">{{ quiz_title }}</h1>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ progress_percentage }}% "></div>
+            </div>
+            
+            <p class="question-counter">
+                Question {{ current_question }} of {{ total_questions }}
+            </p>
+        </div>
+        
+        <div class="question-section">
+            {% if question.chapter %}
+            <span class="chapter-badge">{{ question.chapter.name }}</span>
+            {% endif %}
+            
+            <h2 class="question-text">{{ question.text }}</h2>
+            
+            <form id="answerForm">
+                <ul class="options-list">
+                    {% for option in question.options %}
+                    <li class="option-item">
+                        <label class="option-label">
+                            <input 
+                                type="radio" 
+                                name="answer" 
+                                value="{{ option.id }}"
+                                class="option-input"
+                            >
+                            <span class="option-text">{{ option.text }}</span>
+                        </label>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </form>
+        </div>
+        
+        <div class="navigation-buttons">
+            {% if has_previous %}
+            <a href="{% url 'quiz-question' quiz_id current_question|add:'-1' %}" class="btn btn-previous">
+                ← Previous
+            </a>
+            {% else %}
+            <button class="btn btn-previous" disabled>
+                ← Previous
+            </button>
+            {% endif %}
+            
+            {% if has_next %}
+            <a href="{% url 'quiz-question' quiz_id current_question|add:'1' %}" class="btn btn-next">
+                Next →
+            </a>
+            {% else %}
+            <button type="button" class="btn btn-submit" onclick="submitQuiz()">
+                Submit Quiz
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        // Get data from HTML data attributes
+        const quizContainer = document.querySelector('.quiz-container');
+        const quizId = quizContainer.dataset.quizId;
+        const questionId = quizContainer.dataset.questionId;
+        
+        // Save selected answer before navigating
+        document.querySelectorAll('input[name="answer"]').forEach(input => {
+            input.addEventListener('change', function() {
+                const answerId = this.value;
+                
+                // Save to localStorage for now
+                const answers = JSON.parse(localStorage.getItem(`quizAnswers_${quizId}`) || '{}');
+                answers[questionId] = answerId;
+                localStorage.setItem(`quizAnswers_${quizId}`, JSON.stringify(answers));
+                
+                console.log('Answer saved:', questionId, answerId);
+            });
+        });
+        
+        // Load previously selected answer if exists
+        window.addEventListener('DOMContentLoaded', function() {
+            const answers = JSON.parse(localStorage.getItem(`quizAnswers_${quizId}`) || '{}');
+            const savedAnswer = answers[questionId];
+            
+            if (savedAnswer) {
+                const radio = document.querySelector(`input[value="${savedAnswer}"]`);
+                if (radio) radio.checked = true;
+            }
+        });
+        
+        function submitQuiz() {
+            // Implement quiz submission logic
+            const answers = JSON.parse(localStorage.getItem(`quizAnswers_${quizId}`) || '{}');
+            
+            // Send answers to backend for grading
+            fetch(`/api/quizzes/${quizId}/submit/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ answers: answers })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Quiz submitted! Score: ' + data.score);
+                localStorage.removeItem(`quizAnswers_${quizId}`);
+                window.location.href = `/quizzes/${quizId}/results/`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error submitting quiz');
+            });
+        }
+    </script>
+</body>
+</html>

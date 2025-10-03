@@ -31,7 +31,6 @@ class Quiz(models.Model):
     def __str__(self) -> str:
         return f"{self.title} ({self.subject})"
     
-
 class Chapter(models.Model):
 
     title = models.CharField(max_length=155)
@@ -46,8 +45,6 @@ class Chapter(models.Model):
 
     def __str__(self):
         return self.title
-
-
 
 class Question(models.Model):
 
@@ -92,14 +89,11 @@ class Question(models.Model):
     def __str__(self):
         return f"{self.title} ({self.get_type_display()})"
     
-
 class QuestionImage(models.Model):
 
     question = models.ForeignKey(Question, on_delete= models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='contest/image',validators=[validate_file_size],blank=True,null=True)
     captions = models.CharField(max_length=200,blank=True)
-    
-
 
 class QuestionOption(models.Model):
 
@@ -110,7 +104,6 @@ class QuestionOption(models.Model):
     def __str__(self):
         return f"Options for Q{self.question.id}:{self.text}"
     
-
 class QuizQuestion(models.Model):
 
     quiz = models.ForeignKey('Quiz', on_delete=models.CASCADE,related_name='quiz_question')
@@ -121,7 +114,6 @@ class QuizQuestion(models.Model):
 
     class Meta:
         unique_together = ('quiz','question')
-
 
 class Submission(models.Model):
 
@@ -142,12 +134,6 @@ class Submission(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.question} - {self.is_correct}"
-
-
-
-
-
-
 
 class UserQuizResult(models.Model):
     class Status(models.TextChoices):

@@ -11,6 +11,8 @@ router.register('Quizzes', QuizViewSet)
 
 router.register('Questions', QuestionViewSet)
 
+router.register('submit', QuizStandingViewSet,  basename='quizstanding' )
+
 #router.register('QuizQuestion',QuizQuestionViewSet)
 
 

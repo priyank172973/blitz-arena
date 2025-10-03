@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.db.models import Prefetch
+from rest_framework.decorators import action
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
@@ -85,15 +86,131 @@ class QuizViewSet(ModelViewSet):
         return Response(s.data)
 
     def retrieve(self, request, *args, **kwargs):
-        quiz = self.get_object()  # uses the prefetching from get_queryset()
+        """
+        Retrieve quiz metadata without questions.
+        Use the 'question' action to get individual questions.
+        """
+        quiz = self.get_object()
+        
+        # For retrieve, we'll just return quiz metadata
+        # Don't include questions here
         if request.accepted_renderer.format == "html":
+            # Get total question count
+            total_questions = quiz.quiz_question.count()
             s = self.get_serializer(quiz, context={"request": request})
-            return Response({"quiz": s.data}, template_name="quizzes/detail.html")
+            return Response(
+                {
+                    "quiz": s.data,
+                    "total_questions": total_questions
+                },
+                template_name="quizzes/detail.html"
+            )
+        
         s = self.get_serializer(quiz)
         return Response(s.data)
     
 
-class QuestionViewSet(ModelViewSet):
+
+    @action(detail=True, methods=['get'], url_path='question/(?P<question_number>[0-9]+)')
+    def question(self, request, pk=None, question_number=None):
+        """
+        Get a specific question by its order number (1-indexed).
+        URL: /api/quizzes/{quiz_id}/question/{question_number}/
+        """
+        quiz = self.get_object()
+        question_number = int(question_number)
+        
+        # Get the specific question by order
+        try:
+            quiz_question = quiz.quiz_question.select_related(
+                "question__chapter"
+            ).prefetch_related(
+                "question__options"
+            ).order_by("order")[question_number - 1]
+        except IndexError:
+            return Response(
+                {"error": "Question not found"},
+                status=404
+            )
+        
+        # Get total questions count
+        total_questions = quiz.quiz_question.count()
+        
+        # Prepare response data
+        question_data = {
+            "id": quiz_question.question.id,
+            "text": quiz_question.question.statement,
+            "chapter": {
+                "id": quiz_question.question.chapter.id,
+                "name": quiz_question.question.chapter.title,
+            } if quiz_question.question.chapter else None,
+            "options": [
+                {
+                    "id": opt.id,
+                    "text": opt.text,
+                    "is_correct": opt.is_correct
+                }
+                for opt in quiz_question.question.options.all()
+            ],
+            "order": quiz_question.order,
+        }
+
+        total_questions = quiz.quiz_question.count()
+
+        progress_percentage = round((question_number / total_questions) * 100, 1)
+        
+        response_data = {
+            "quiz_id": quiz.id,
+            "quiz_title": quiz.title,
+            "current_question": question_number,
+            "total_questions": total_questions,
+            "progress_percentage": progress_percentage,
+            "has_next": question_number < total_questions,
+            "has_previous": question_number > 1,
+            "question": question_data
+        }
+        
+        # HTML response
+        if request.accepted_renderer.format == "html":
+            return Response(
+                response_data,
+                template_name="quizzes/question.html"
+            )
+        
+        # JSON response
+        return Response(response_data)
+
+    @action(detail=True, methods=['get'], url_path='start')
+    def start(self, request, pk=None):
+        """
+        Start the quiz - redirects to first question.
+        URL: /api/quizzes/{quiz_id}/start/
+        """
+        quiz = self.get_object()
+        
+        # Check if quiz has questions
+        if not quiz.quiz_question.exists():
+            return Response(
+                {"error": "This quiz has no questions"},
+                status=400
+            )
+        
+        # For HTML, redirect to first question
+        if request.accepted_renderer.format == "html":
+            from django.shortcuts import redirect
+            return redirect('quiz-question', pk=pk, question_number=1)
+        
+        # For JSON, return link to first question
+        return Response({
+            "quiz_id": quiz.id,
+            "message": "Quiz started",
+            "next_url": f"/api/quizzes/{quiz.id}/question/1/"
+        })
+   
+         
+        
+
+class QuestionViewSet(ModelViewSet): #Displays questions on all question pages ( With Filteration applied )
 
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
 
@@ -285,4 +402,3 @@ class QuizStandingViewSet(ModelViewSet):
 
        # Still need to think about this
 
-   
